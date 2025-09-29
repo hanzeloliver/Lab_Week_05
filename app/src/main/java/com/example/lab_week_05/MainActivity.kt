@@ -58,12 +58,18 @@ class MainActivity : AppCompatActivity() {
             override fun onResponse(call: Call<List<ImageData>>, response: Response<List<ImageData>>) {
                 if (response.isSuccessful) {
                     val images = response.body()
-                    val firstImage = images?.firstOrNull()?.imageUrl.orEmpty()
+                    val firstImage = images?.firstOrNull()
 
-                    apiResponseView.text = getString(R.string.image_placeholder, firstImage)
+                    // ✅ Ambil nama breed atau Unknown
+                    val breedName = firstImage?.breeds?.firstOrNull()?.name ?: "Unknown"
 
-                    if (firstImage.isNotBlank()) {
-                        imageLoader.loadImage(firstImage, imageResultView)
+                    // Tampilkan breed di TextView
+                    apiResponseView.text = getString(R.string.breed_placeholder, breedName)
+
+                    // ✅ Tampilkan gambar di ImageView
+                    val imageUrl = firstImage?.imageUrl.orEmpty()
+                    if (imageUrl.isNotBlank()) {
+                        imageLoader.loadImage(imageUrl, imageResultView)
                     }
                 } else {
                     Log.e(MAIN_ACTIVITY, "Failed response: ${response.errorBody()?.string().orEmpty()}")
