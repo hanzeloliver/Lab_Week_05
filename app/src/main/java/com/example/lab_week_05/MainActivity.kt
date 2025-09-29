@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.ImageView
 import android.widget.TextView
 import com.example.lab_week_05.api.CatApiService
 import com.example.lab_week_05.model.ImageData
@@ -27,6 +28,14 @@ class MainActivity : AppCompatActivity() {
         findViewById(R.id.api_response)
     }
 
+    private val imageResultView: ImageView by lazy {
+        findViewById(R.id.image_result)
+    }
+
+    private val imageLoader: ImageLoader by lazy {
+        GlideLoader(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -37,7 +46,7 @@ class MainActivity : AppCompatActivity() {
     private fun getCatImageResponse() {
         val apiKey = "live_XJ33cqEFSI4eOO3jAtZ7XWwZ5pqjLQUW91c44K8rnDzDNUoQggUDF4eALgixBcT8"
 
-        val call = catApiService.searchImages(apiKey, 5, "full")
+        val call = catApiService.searchImages(apiKey, 1, "full") // ambil 1 gambar kucing
         call.enqueue(object : Callback<List<ImageData>> {
             @SuppressLint("SetTextI18n")
             override fun onFailure(call: Call<List<ImageData>>, t: Throwable) {
@@ -49,9 +58,13 @@ class MainActivity : AppCompatActivity() {
             override fun onResponse(call: Call<List<ImageData>>, response: Response<List<ImageData>>) {
                 if (response.isSuccessful) {
                     val images = response.body()
-                    val urls = images?.joinToString("\n") { it.imageUrl }
-                        ?: "No images found"
-                    apiResponseView.text = urls
+                    val firstImage = images?.firstOrNull()?.imageUrl.orEmpty()
+
+                    apiResponseView.text = getString(R.string.image_placeholder, firstImage)
+
+                    if (firstImage.isNotBlank()) {
+                        imageLoader.loadImage(firstImage, imageResultView)
+                    }
                 } else {
                     Log.e(MAIN_ACTIVITY, "Failed response: ${response.errorBody()?.string().orEmpty()}")
                     apiResponseView.text = "Failed to fetch data"
